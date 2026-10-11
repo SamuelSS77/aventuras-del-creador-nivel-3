@@ -544,18 +544,13 @@ function check3(){if(interviews()===3)D.q.push({s:'piensa',t:'Ya tengo las tres 
 function introZ1(){
   S.mode='world';
   talk([
-    {s:'piensa',t:'Para seguir mi viaje tengo que cruzar este pueblo… pero un muro enorme corta la calle principal.'},
-    {s:'adivino',t:'¡Bienvenido, Creador! Soy el Adivino. Este pueblo entero lo diseñé yo.'},
-    {s:'adivino',t:'¿Preguntarle a la gente? Jamás. Mi bola de cristal me muestra lo que necesitan.'},
-    {s:'adivino',t:'Mi bola vio que el pueblo quería un monumento grandioso. ¡Y aquí está mi muro!'},
-    {s:'rosa',t:'Ay… otra vez el muro. Con el carrito no hay forma de pasar.'},
+    {s:'adivino',t:'¡Bienvenido, Creador! Soy el Adivino. Diseñé este pueblo sin preguntarle a nadie: mi bola me dice lo que necesitan. ¡Como este muro monumental!'},
     {s:'adivino',t:'Señora, ¿verdad que ama mi muro?'},
     {s:'rosa',t:'Eh… sí, claro. Muy bonito.'},
-    {s:'adivino',t:'¿Ves? Lo aman.'},
-    {s:'piensa',t:'Le preguntó si le gustaba y ella dijo que sí. Con una pregunta así solo escuchas lo que quieres oír.'},
+    {s:'piensa',t:'Con una pregunta así, solo escuchas lo que quieres oír.'},
     ()=>addLes('A'),
-    {s:'adivino',t:'Te reto, Creador: despeja la calle. Predigo que moverás los bloques al azar… y armarás otro desastre. ¡Mi bola nunca falla!'},
-    {s:'piensa',t:'Mover bloques al azar sería adivinar, igual que él. Primero voy a entender a la gente. Los que tienen «?» tienen algo que contarme.'}
+    {s:'adivino',t:'Te reto: despeja la calle. ¡Mi bola dice que fracasarás!'},
+    {s:'piensa',t:'No voy a adivinar. Primero hablo con los que tienen «?».'}
   ],updObj);
 }
 function talkRosa(){
