@@ -1,36 +1,59 @@
 <!doctype html>
 <html lang="es">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<style>[hidden]{display:none!important}body{margin:0}</style>
-<title>El Pueblo del Adivino</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Baloo+2:wght@500;600;700&family=Kalam:wght@400;700&display=swap">
-<link rel="stylesheet" href="styles.css">
-</head>
-<body>
-<div id="app">
-  <div id="stage" class="stage">
-    <canvas id="cv" width="960" height="600" aria-label="Pantalla del juego"></canvas>
-    <div id="hud" class="hud compact" hidden><div class="hud-card"><div id="hudTime" class="hud-time"></div><ul id="hudList" class="hud-list"></ul></div></div>
-    <button id="btnBit" class="hud-bit" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="15" height="18" rx="2" fill="#7a4fc9" stroke="#2a2238" stroke-width="2"/><rect x="7" y="3" width="2" height="18" fill="#2a2238"/><path d="M11 8h5M11 12h5M11 16h3" stroke="#f6efe0" stroke-width="2" stroke-linecap="round"/></svg><span>Bitácora</span><span id="bitCount" class="n">0</span></button>
-    <div id="dialog" class="dialog" hidden>
-      <canvas id="portrait" class="portrait" width="120" height="120" aria-hidden="true"></canvas>
-      <div id="dlgName" class="dlg-name"></div>
-      <div id="dlgTag" class="dlg-tag" hidden></div>
-      <div id="dlgText" class="dlg-text"></div>
-      <div id="dlgChoices" class="dlg-choices"></div>
-      <div id="dlgHint" class="dlg-hint"></div>
-    </div>
-    <div id="toast" class="toast" hidden></div>
-  </div>
-  <div id="mgbar" class="mgbar" hidden></div>
-  <p class="controls">Moverse: flechas o WASD (o clic en el suelo) · Hablar y continuar: E o Espacio · Bitácora: B</p>
-</div>
-<div id="modal" class="modal" hidden><div id="modalCard" class="modal-card" role="dialog" aria-modal="true"></div></div>
 
-<script src="game.js"></script>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <style>
+    [hidden] {
+      display: none !important
+    }
+
+    body {
+      margin: 0
+    }
+  </style>
+  <title>El Pueblo del Adivino</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Baloo+2:wght@500;600;700&family=Kalam:wght@400;700&display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div id="app">
+    <div id="stage" class="stage">
+      <canvas id="cv" width="960" height="600" aria-label="Pantalla del juego"></canvas>
+      <div id="hud" class="hud compact" hidden>
+        <div class="hud-card">
+          <div id="hudTime" class="hud-time"></div>
+          <ul id="hudList" class="hud-list"></ul>
+        </div>
+      </div>
+      <button id="btnBit" class="hud-bit" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="4" y="3" width="15" height="18" rx="2" fill="#7a4fc9" stroke="#2a2238" stroke-width="2" />
+          <rect x="7" y="3" width="2" height="18" fill="#2a2238" />
+          <path d="M11 8h5M11 12h5M11 16h3" stroke="#f6efe0" stroke-width="2" stroke-linecap="round" />
+        </svg><span>Bitácora</span><span id="bitCount" class="n">0</span></button>
+      <div id="dialog" class="dialog" hidden>
+        <canvas id="portrait" class="portrait" width="120" height="120" aria-hidden="true"></canvas>
+        <div id="dlgName" class="dlg-name"></div>
+        <div id="dlgTag" class="dlg-tag" hidden></div>
+        <div id="dlgText" class="dlg-text"></div>
+        <div id="dlgChoices" class="dlg-choices"></div>
+        <div id="dlgHint" class="dlg-hint"></div>
+      </div>
+      <div id="toast" class="toast" hidden></div>
+    </div>
+    <div id="mgbar" class="mgbar" hidden></div>
+    <p class="controls">Moverse: flechas o WASD (o clic en el suelo) · Hablar y continuar: E o Espacio · Bitácora: B</p>
+  </div>
+  <div id="modal" class="modal" hidden>
+    <div id="modalCard" class="modal-card" role="dialog" aria-modal="true"></div>
+  </div>
+
+  <script src="game.js"></script>
 </body>
+
 </html>
