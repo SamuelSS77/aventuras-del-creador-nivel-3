@@ -139,6 +139,8 @@ namespace AventurasNivel3
             w = Math.Min(320 - 24 - 4, w + 1);
             hudPanel.CustomMinimumSize = new Vector2(w + 24 + 4, 0);
             hudTime.CustomMinimumSize = new Vector2(w, 0);
+            // Cada texto de misión con su ancho fijo: así su alto no depende del primer cálculo de diseño.
+            foreach (var row in hudList.GetChildren()) if (row is HBoxContainer h) foreach (var ch in h.GetChildren()) if (ch is RichTextLabel r) r.CustomMinimumSize = new Vector2(w - 17.5f, 0);
             hudPanel.CallDeferred(Control.MethodName.ResetSize);
         }
         void UiHudCompact(bool c) { if (hudCompact == c) return; hudCompact = c; hudList.Visible = !c; FitHud(); }
@@ -267,6 +269,8 @@ namespace AventurasNivel3
 
         void UiFrame(double ms)
         {
+            // El cuadro de misiones solo ocupa lo que mide su contenido (en la web no se estira).
+            if (hudPanel.Visible) hudPanel.ResetSize();
             if (hintBlink) { blinkT += ms; dlgHint.Text = hintBase + ((int)(blinkT / 500) % 2 == 0 ? " ▼" : "   "); }
         }
 
