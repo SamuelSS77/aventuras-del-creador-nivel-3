@@ -16,8 +16,12 @@
   const CK = {
     player: { body: '#f08a3c', dark: '#c96a24' }, rosa: { body: '#f283a5', dark: '#cf5f82' }, mario: { body: '#f3c24f', dark: '#cf9a2c' },
     tito: { body: '#62bfe8', dark: '#3b97c2' }, ernesto: { body: '#b08463', dark: '#8a6245' }, taq: { body: '#69b884', dark: '#4a9466' },
-    adivino: { body: '#8d62d9', dark: '#653fb0' }, c1: { body: '#e98fd0', dark: '#c46aac' }, c2: { body: '#f0a35a', dark: '#c97f3a' }, c3: { body: '#7fa4e8', dark: '#5a80c4' }
+    adivino: { body: '#8d62d9', dark: '#653fb0' }, c1: { body: '#e98fd0', dark: '#c46aac' }, c2: { body: '#f0a35a', dark: '#c97f3a' }, c3: { body: '#7fa4e8', dark: '#5a80c4' },
+    cat: { body: '#8b93a7', dark: '#646b80' }
   };
+  // Boceto, el gato del Creador: lo acompaña en todo el nivel y lo ayuda cuando hace falta.
+  const CAT_NAME = 'Boceto';
+  const CAT = { body: '#8b93a7', dark: '#5f667b', light: '#f1f2f6', ear: '#f2a7bd', eye: '#9be15d', nose: '#f283a5' };
   const FONT = '"Atkinson Hyperlegible", system-ui, sans-serif';
   const FONT_D = '"Baloo 2", "Trebuchet MS", sans-serif';
   const RM = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -25,7 +29,7 @@
   const SPK = {
     creador: { n: 'Creador', k: 'player' }, piensa: { n: 'Creador (piensa)', k: 'player', think: true }, adivino: { n: 'El Adivino', k: 'adivino' },
     rosa: { n: 'Doña Rosa', k: 'rosa' }, mario: { n: 'Don Mario', k: 'mario' }, tito: { n: 'Tito', k: 'tito' }, ernesto: { n: 'Don Ernesto', k: 'ernesto' },
-    taq: { n: 'Jefe de estación', k: 'taq' }, pueblo: { n: 'El pueblo', k: 'crowd' }
+    taq: { n: 'Jefe de estación', k: 'taq' }, pueblo: { n: 'El pueblo', k: 'crowd' }, boceto: { n: CAT_NAME, k: 'cat' }
   };
   const EVID = {
     rosa: { src: 'Entrevista', kind: 'entrevista', who: 'Doña Rosa', txt: '«Con el carrito no puedo trepar. Necesito pasar por el centro de la calle, que es plano.»' },
@@ -49,7 +53,8 @@
 
   const S = {
     mode: 'title', zone: 0, f: {}, ev: [], les: [], t: 0, modal: null, fade: 0,
-    p: { x: 70, y: 310, r: 15, face: 1, tx: null, ty: null, goal: null, moving: false }, ents: [], duel: null, soko: null, tiles: null
+    p: { x: 70, y: 310, r: 15, face: 1, tx: null, ty: null, goal: null, moving: false, idle: 0 }, ents: [], duel: null, soko: null, tiles: null,
+    cat: { x: 44, y: 320, face: 1, moving: false, mode: 'follow', sitT: 1, bub: null, fx: [], trail: [], guide: null, helpT: 0, progKey: '', petN: 0, rub: 0 }
   };
 
   function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
@@ -208,6 +213,53 @@
     [['#e0513f', -0.35], ['#f39c33', 0], ['#7fbf4d', 0.35]].forEach(([c, a]) => circle(x + a * s, y - s * 0.42, s * 0.22, c, OUT, 1.5));
     circle(x - s * 0.45, y + s * 0.5, s * 0.2, '#4a4458', OUT, 2); circle(x + s * 0.45, y + s * 0.5, s * 0.2, '#4a4458', OUT, 2);
   }
+  /* Boceto: gato atigrado gris, dibujado mirando a la derecha (se voltea con face = -1).
+     o: { s escala, face, moving, sit, happy (ojos cerrados), sad, meow (boca abierta), purr, seed } */
+  function drawCat(x, y, o) {
+    o = o || {}; const s = o.s || 1, f = o.face || 1, t = S.t + (o.seed || 0) * 17;
+    const sit = !!o.sit && !o.moving, step = o.moving ? Math.sin(t * 0.5) : 0;
+    const bob = o.moving ? Math.abs(step) * 1.3 * s : (o.purr ? Math.sin(t * 0.7) * 0.7 * s : 0), lw = Math.max(1.6, 2.3 * s);
+    ellipse(x, y + 8 * s, (sit ? 11 : 15) * s, 4.2 * s, 'rgba(30,20,40,.28)');
+    ctx.save(); ctx.translate(x, y - bob); if (f < 0) ctx.scale(-1, 1);
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    const sw = Math.sin(t * (o.happy || o.purr ? 0.16 : 0.07));
+    ctx.beginPath();
+    if (sit) { ctx.moveTo(-6 * s, 5 * s); ctx.quadraticCurveTo(-17 * s, 6 * s, -14 * s + sw * 2.5 * s, -8 * s); }
+    else { ctx.moveTo(-11 * s, -1 * s); ctx.quadraticCurveTo(-21 * s, -3 * s, -19 * s + sw * 4 * s, -14 * s); }
+    ctx.strokeStyle = OUT; ctx.lineWidth = 6.2 * s; ctx.stroke(); ctx.strokeStyle = CAT.body; ctx.lineWidth = 3.4 * s; ctx.stroke();
+    if (!sit) [[-8, step], [-4, -step], [5, -step], [9, step]].forEach(([lx, ph]) => ellipse(lx * s, (6.2 - Math.max(0, ph) * 1.6) * s, 2.5 * s, 3 * s, CAT.dark, OUT, lw * 0.6));
+    if (sit) { ellipse(0, 0, 8.6 * s, 9.2 * s, CAT.body); ellipse(3 * s, 2 * s, 4.2 * s, 5.8 * s, CAT.light); }
+    else { ellipse(-1 * s, 0, 12.5 * s, 7.6 * s, CAT.body); ellipse(2 * s, 3.2 * s, 7.5 * s, 3 * s, CAT.light); }
+    ctx.strokeStyle = CAT.dark; ctx.lineWidth = 1.8 * s;
+    (sit ? [[-6, -4], [-7, 0], [-6.5, 4]] : [[-8, -7], [-4, -7.4], [0, -7.4]]).forEach(([a, b]) => { ctx.beginPath(); ctx.moveTo(a * s, b * s); ctx.lineTo((a + (sit ? 2.6 : 0.8)) * s, (b + (sit ? 0.4 : 3)) * s); ctx.stroke(); });
+    if (sit) { ellipse(0, 0, 8.6 * s, 9.2 * s, null, OUT, lw); ellipse(3.5 * s, 8 * s, 2.8 * s, 2 * s, CAT.light, OUT, lw * 0.6); ellipse(7.5 * s, 8 * s, 2.8 * s, 2 * s, CAT.light, OUT, lw * 0.6); }
+    else ellipse(-1 * s, 0, 12.5 * s, 7.6 * s, null, OUT, lw);
+    const hx = sit ? 3.5 * s : 10 * s, hy = sit ? -11 * s : -6.5 * s, eh = o.sad ? 0.55 : 1;
+    [[[-5.6, -3], [-6, -3 - 8.5 * eh], [-0.8, -6.2]], [[1.4, -6.6], [6.2, -3 - 8.5 * eh], [6.4, -2.4]]].forEach(tri => {
+      ctx.beginPath(); tri.forEach(([a, b], j) => { const px = hx + a * s, py = hy + b * s; if (j) ctx.lineTo(px, py); else ctx.moveTo(px, py); }); ctx.closePath();
+      ctx.fillStyle = CAT.body; ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = lw * 0.8; ctx.stroke();
+    });
+    circle(hx, hy, 7.4 * s, CAT.body, OUT, lw);
+    ctx.fillStyle = CAT.ear; [[-4.2, -5.4], [3.8, -5.6]].forEach(([a, b]) => { ctx.beginPath(); ctx.arc(hx + a * s, hy + b * s - 1.4 * s * eh, 1.4 * s, 0, Math.PI * 2); ctx.fill(); });
+    ellipse(hx + 1.8 * s, hy + 3.2 * s, 4.2 * s, 2.8 * s, CAT.light);
+    ctx.strokeStyle = CAT.dark; ctx.lineWidth = 1.4 * s; ctx.beginPath(); ctx.moveTo(hx - 1.5 * s, hy - 6.8 * s); ctx.lineTo(hx - 1 * s, hy - 4.2 * s); ctx.moveTo(hx + 1.5 * s, hy - 7 * s); ctx.lineTo(hx + 1.6 * s, hy - 4.4 * s); ctx.stroke();
+    const blink = ((t + 31) % 210) < 6;
+    [[-1.8, 0], [3.8, 0]].forEach(([a]) => {
+      const ex = hx + a * s, ey = hy - 0.6 * s;
+      if (o.happy || blink) { ctx.beginPath(); ctx.arc(ex, ey + 0.8 * s, 1.6 * s, Math.PI * 1.1, Math.PI * 1.9); ctx.strokeStyle = OUT; ctx.lineWidth = 1.3 * s; ctx.stroke(); }
+      else if (o.sad) { ctx.beginPath(); ctx.moveTo(ex - 1.6 * s, ey + 0.4 * s); ctx.lineTo(ex + 1.6 * s, ey + 0.9 * s); ctx.strokeStyle = OUT; ctx.lineWidth = 1.3 * s; ctx.stroke(); }
+      else { ellipse(ex, ey, 1.7 * s, 2.1 * s, CAT.eye, OUT, Math.max(0.8, 0.9 * s)); ellipse(ex + 0.3 * s, ey, 0.55 * s, 1.5 * s, OUT); circle(ex - 0.4 * s, ey - 0.8 * s, 0.45 * s, COL.white); }
+    });
+    ctx.beginPath(); ctx.moveTo(hx + 1.2 * s, hy + 1.9 * s); ctx.lineTo(hx + 3 * s, hy + 1.9 * s); ctx.lineTo(hx + 2.1 * s, hy + 3 * s); ctx.closePath(); ctx.fillStyle = CAT.nose; ctx.fill();
+    if (o.meow) ellipse(hx + 2.1 * s, hy + 4.6 * s, 1.2 * s, 1.1 * s, OUT);
+    ctx.strokeStyle = 'rgba(42,34,56,.55)'; ctx.lineWidth = Math.max(0.8, 0.7 * s);
+    [-1, 0, 1].forEach(k => { ctx.beginPath(); ctx.moveTo(hx + 4.6 * s, hy + (2.8 + k * 0.9) * s); ctx.lineTo(hx + 9.2 * s, hy + (2.4 + k * 1.8) * s); ctx.stroke(); });
+    ctx.restore();
+  }
+  function drawPaw(x, y, r, col) {
+    ellipse(x, y + r * 0.35, r * 0.62, r * 0.5, col);
+    [[-0.62, -0.32], [-0.22, -0.7], [0.22, -0.7], [0.62, -0.32]].forEach(([a, b]) => circle(x + a * r, y + b * r, r * 0.24, col));
+  }
 
   /* ---------- Escenografía ---------- */
   let GRASS = null, COBBLE = null, BGZ1 = null;
@@ -309,7 +361,129 @@
   function visible(e) { return !(e.hidden && e.hidden()); }
   function nearest() { let best = null, bd = 34; S.ents.forEach(e => { if (!visible(e) || !e.act) return; const d = distTo(e); if (d < bd) { bd = d; best = e; } }); return best; }
   function entAt(mx, my) { return S.ents.find(e => visible(e) && e.act && Math.hypot(mx - e.x, my - e.y) < e.r + 16) || null; }
-  function resetPlayer(x, y) { S.p.x = x; S.p.y = y; S.p.tx = null; S.p.ty = null; S.p.goal = null; S.p.face = 1; }
+  function resetPlayer(x, y) { S.p.x = x; S.p.y = y; S.p.tx = null; S.p.ty = null; S.p.goal = null; S.p.face = 1; S.p.idle = 0; catReset(x - 28, y + 10); }
+
+  /* ---------- Boceto, el gato del Creador ---------- */
+  // Modos: follow (te sigue), guide (te muestra el siguiente paso), assist (corre a darte fuerzas),
+  // calm (escena de calma antes del dilema), away (se aleja triste en el final 1), perch (mira los minijuegos).
+  const CAT_IDLE_HELP = 20; // segundos sin avanzar antes de que Boceto te muestre el camino
+  function catReset(x, y) { const c = S.cat; Object.assign(c, { x, y, face: 1, moving: false, mode: 'follow', sitT: 1, bub: null, guide: null, helpT: 0, rub: 0 }); c.trail = []; c.fx = []; }
+  function catSay(txt, dur) { S.cat.bub = { txt, t: 0, dur: dur || 2.2 }; }
+  function catHearts(n, col) { const c = S.cat; for (let i = 0; i < (n || 3); i++) c.fx.push({ x: c.x + (Math.random() - 0.5) * 18, y: c.y - 18, vx: (Math.random() - 0.5) * 14, t: -i * 0.22, life: 1.4, kind: col === 'note' ? 'note' : 'heart' }); }
+  function catProgress() { const f = S.f; return [S.zone, f.i_rosa, f.i_mario, f.i_tito, f.wall, f.metricas, f.tiles].join(); }
+  function catStand(e) { const side = S.p.x < e.x ? -1 : 1; return { x: Math.max(20, Math.min(W - 20, e.x + side * (e.r + 22))), y: Math.max(226, Math.min(396, e.y + 12)), ent: e }; }
+  function catTarget() {
+    const ent = id => S.ents.find(e => e.id === id);
+    if (S.zone === 1) {
+      if (interviews() < 3) {
+        const left = ['rosa', 'mario', 'tito'].filter(id => !S.f['i_' + id]).map(ent).filter(Boolean);
+        left.sort((a, b) => Math.hypot(a.x - S.p.x, a.y - S.p.y) - Math.hypot(b.x - S.p.x, b.y - S.p.y));
+        return left[0] ? catStand(left[0]) : null;
+      }
+      if (!S.f.wall) return { x: 556, y: 312, ent: ent('muro') };
+      return { x: 900, y: 318 };
+    }
+    if (S.zone === 2) {
+      if (!S.f.metricas) return catStand(ent('taq'));
+      if (!S.f.tiles) return catStand(ent('tablero'));
+      return { x: 900, y: 318 };
+    }
+    return null;
+  }
+  function catGuide(tg, say) {
+    tg = tg || catTarget(); if (!tg) return;
+    const c = S.cat; c.mode = 'guide'; c.guide = tg; c.guideT = 0; c.trail = []; c.helpT = 0;
+    catSay(say || '¡Miau! Por aquí.', 2.4);
+  }
+  function catCanPet() {
+    const c = S.cat, p = S.p;
+    return S.mode === 'world' && !D.on && !S.modal && c.mode === 'follow' && p.idle > 2.5 && Math.hypot(c.x - p.x, c.y - p.y) < 52;
+  }
+  function petCat() {
+    const c = S.cat; c.petN++; c.rub = 1.6; c.face = S.p.x > c.x ? 1 : -1; catHearts(4); catSay('Prrr…', 1.8); c.helpT = 0;
+    if (c.petN === 1) talk([{ s: 'boceto', t: 'Prrr… prrr…' }, { s: 'piensa', t: 'Boceto siempre sabe cuándo necesito una pausa.' }]);
+  }
+  function catPerch() { return S.mode === 'soko' ? { x: 46, y: 420, face: 1 } : { x: 132, y: 478, face: 1 }; }
+  function updCat(dt, ms) {
+    const c = S.cat, p = S.p, s = ms / 1000;
+    c.fx.forEach(f => { f.t += s; }); c.fx = c.fx.filter(f => f.t < f.life);
+    c.trail.forEach(q => { q.t += s; }); c.trail = c.trail.filter(q => q.t < 5);
+    if (c.bub) { c.bub.t += s; if (c.bub.t > c.bub.dur) c.bub = null; }
+    if (c.rub > 0) c.rub -= s;
+    if (S.mode === 'title') return;
+    if (S.mode === 'soko' || S.mode === 'tiles') { const q = catPerch(); c.x = q.x; c.y = q.y; c.face = q.face; c.moving = false; c.sitT += s; if (c.mode !== 'perch') { c.mode = 'perch'; c.bub = null; } return; }
+    if (c.mode === 'perch') { c.mode = 'follow'; c.x = p.x - 28; c.y = p.y + 10; }
+    const plaza = S.mode === 'plaza' || (S.mode === 'end' && S.zone === 3);
+    const yMin = plaza ? 230 : 224, yMax = plaza ? 560 : 400;
+    // ayuda cuando te quedas sin rumbo (solo en el mundo abierto)
+    if (S.mode === 'world') {
+      const key = catProgress();
+      if (key !== c.progKey) { c.progKey = key; c.helpT = 0; if (c.mode === 'guide') c.mode = 'follow'; }
+      if (D.on || S.modal) c.helpT = 0; else if (c.mode === 'follow') { c.helpT += s; if (c.helpT > CAT_IDLE_HELP) { catGuide(null); if (S.cat.mode === 'guide') toast(CAT_NAME + ' te muestra por dónde seguir'); } }
+    } else if (c.mode === 'guide') c.mode = 'follow';
+    const z = S.pz;
+    let tx, ty, spd, stopAt = 4;
+    if ((c.mode === 'guide' || c.mode === 'visit') && c.guide) { tx = c.guide.x; ty = c.guide.y; spd = 3.4; }
+    else if (c.mode === 'assist' || c.mode === 'calm') { tx = p.x + p.face * 20; ty = p.y + 8; spd = c.mode === 'assist' ? 5.2 : 2.4; }
+    else if (c.mode === 'away') { tx = Math.max(40, Math.min(W - 40, p.x + (p.x < 480 ? 130 : -130))); ty = Math.min(yMax, p.y + 6); spd = 1.8; }
+    else { tx = p.x - p.face * 28; ty = p.y + 10; spd = null; stopAt = 14; }
+    if (S.zone === 1 && !S.f.wall && !plaza) tx = Math.min(tx, 572);
+    ty = Math.max(yMin, Math.min(yMax, ty));
+    const dx = tx - c.x, dy = ty - c.y, d = Math.hypot(dx, dy);
+    const ox = c.x;
+    if (d > stopAt) {
+      const v = (spd != null ? spd : Math.min(5.6, 0.8 + d * 0.06)) * dt, k = Math.min(1, v / d);
+      c.x += dx * k; c.y += dy * k; c.moving = true; c.sitT = 0;
+      if (Math.abs(c.x - ox) > 0.15) c.face = Math.sign(c.x - ox);
+      if (c.mode === 'guide') { const lt = c.trail[c.trail.length - 1]; if (!lt || Math.hypot(lt.x - c.x, lt.y - c.y) > 22) c.trail.push({ x: c.x, y: c.y + 6, t: 0, f: c.face, n: c.trail.length }); }
+    } else {
+      c.moving = false; c.sitT += s;
+      if (c.mode === 'follow' || c.mode === 'calm') c.face = p.x >= c.x ? 1 : -1;
+      if (c.mode === 'away') c.face = p.x >= c.x ? -1 : 1;
+      if (c.mode === 'visit') c.face = 385 >= c.x ? 1 : -1;
+    }
+    if (c.mode === 'guide') {
+      c.guideT += s;
+      if (!c.moving && Math.floor(c.guideT / 2.6) !== Math.floor((c.guideT - s) / 2.6)) catSay('¡Miau!', 1.4);
+      if ((d <= stopAt && c.guideT > 0.6 && Math.hypot(p.x - c.x, p.y - c.y) < 64) || c.guideT > 30) { c.mode = 'follow'; c.guide = null; c.helpT = 0; }
+    }
+    if (c.mode === 'assist') {
+      if (!z || z.paused || (z.phase !== 'strike' && z.phase !== 'team')) c.mode = 'follow';
+      else if (d < 18) { z.energy = Math.min(100, (z.energy || 0) + 35); c.mode = 'follow'; c.rub = 1.2; catHearts(3); catSay('Prrr…', 1.4); pzFx(CAT_NAME + ' ronronea · + fuerzas', p.x, p.y - 46, CAT.eye); }
+    }
+    if (c.mode === 'calm' && z && z.calm) {
+      const m = z.calm; m.t += s;
+      if (p.y > 400) { p.y += (400 - p.y) * Math.min(1, 0.06 * dt); p.moving = true; }
+      if (m.phase === 'approach' && (d < 6 || m.t > 3.5)) { m.phase = 'talk'; c.rub = 99; pzCalmTalk(); }
+      if (m.phase !== 'approach') { z.energy = Math.min(100, (z.energy || 0) + 14 * s); if (Math.floor(m.t / 0.9) !== Math.floor((m.t - s) / 0.9)) catHearts(1, Math.random() < 0.5 ? 'note' : null); }
+    }
+  }
+  function drawCatAt() {
+    const c = S.cat, purr = c.rub > 0;
+    const sitting = !c.moving && c.sitT > 0.35;
+    drawCat(c.x + (purr && !c.moving ? Math.sin(S.t * 0.12) * 3 : 0), c.y, { s: S.mode === 'soko' || S.mode === 'tiles' ? 1.1 : 1.15, face: c.face, moving: c.moving, sit: sitting, happy: purr, purr, sad: c.mode === 'away', meow: !!(c.bub && c.bub.t < 0.5) || (D.on && D.spk === 'boceto' && D.typing) });
+    if (c.mode === 'guide') label(CAT_NAME, c.x, c.y + 22);
+  }
+  function drawCatTrail() {
+    S.cat.trail.forEach(q => { const a = Math.max(0, 1 - q.t / 5) * 0.55; ctx.globalAlpha = a; drawPaw(q.x + (q.n % 2 ? 4 : -4), q.y, 5, '#3b3152'); ctx.globalAlpha = 1; });
+  }
+  function drawCatOverlay() {
+    const c = S.cat;
+    c.fx.forEach(f => {
+      if (f.t < 0) return; const a = Math.max(0, 1 - f.t / f.life), fx = f.x + f.vx * f.t, fy = f.y - f.t * 34;
+      ctx.globalAlpha = a;
+      if (f.kind === 'note') txt('♪', fx, fy, '700 18px ' + FONT_D, CAT.light);
+      else { ctx.save(); ctx.translate(fx, fy); ctx.beginPath(); ctx.moveTo(0, 4); ctx.bezierCurveTo(-8, -2, -5, -9, 0, -4); ctx.bezierCurveTo(5, -9, 8, -2, 0, 4); ctx.fillStyle = '#ff7fa3'; ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 1.5; ctx.stroke(); ctx.restore(); }
+      ctx.globalAlpha = 1;
+    });
+    if (c.bub) { const a = Math.min(1, (c.bub.dur - c.bub.t) * 3); ctx.globalAlpha = Math.max(0, a); bubble(c.bub.txt, c.x, c.y - 26, CAT.dark); ctx.globalAlpha = 1; }
+    if (c.mode === 'guide' && c.guide && c.guide.ent && !c.moving) { const e = c.guide.ent, b = Math.sin(S.t * 0.15) * 3; circle(e.x, e.y - e.r - 30 + b, 13, 'rgba(42,34,56,.88)', CAT.light, 2); drawPaw(e.x, e.y - e.r - 29 + b, 7, CAT.light); }
+  }
+  function drawCatPrompt() {
+    const c = S.cat, s = 'Acariciar a ' + CAT_NAME;
+    ctx.font = '700 13px ' + FONT; const tw = ctx.measureText(s).width, w = tw + 44, x = Math.max(8, Math.min(W - w - 8, c.x - w / 2)), y = c.y - 52;
+    rr(x, y, w, 28, 14, 'rgba(42,34,56,.94)', OUT, 2); rr(x + 5, y + 4, 20, 20, 5, COL.cream, OUT, 1.5); txt('E', x + 15, y + 14.5, '700 12px ' + FONT, OUT); txt(s, x + 32 + tw / 2, y + 14.5, '700 13px ' + FONT, COL.cream);
+  }
 
   function zone1() {
     S.zone = 1; resetPlayer(70, 310); S.fade = 1;
@@ -353,13 +527,15 @@
   function introZ1() {
     S.mode = 'world';
     talk([
+      { s: 'piensa', t: 'Llegamos, ' + CAT_NAME + '. Pueblo nuevo, proyecto nuevo.' },
+      { s: 'boceto', t: 'Miau.' },
       { s: 'adivino', t: '¡Bienvenido, Creador! Soy el Adivino y diseñé este pueblo sin preguntarle a nadie. ¡Como este muro monumental! Señora, ¿verdad que ama mi muro?' },
       { s: 'rosa', t: 'Eh… sí, claro. Muy bonito.' },
       { s: 'piensa', t: 'Esa pregunta solo busca un sí.' },
       () => addLes('A'),
       { s: 'adivino', t: 'Te reto: despeja la calle. ¡Mi bola dice que fracasarás!' },
       { s: 'piensa', t: 'No voy a adivinar. Primero hablo con los que tienen «?».' }
-    ], updObj);
+    ], () => { updObj(); toast(CAT_NAME + ' te acompaña. Si no sabes qué hacer, te mostrará el camino.'); });
   }
   function talkRosa() {
     if (S.f.wall) return talk([{ s: 'rosa', t: '¡Derechito y sin piedras hasta el mercado! Gracias por preguntar antes de mover nada.' }]);
@@ -408,7 +584,7 @@
         }
       ]
     });
-    talk([{ s: 'tito', t: '¡Hola! ¿Viste? Yo sí paso el muro: me trepo como gato.' }, q()]);
+    talk([{ s: 'tito', t: '¡Hola! ¿Viste? Yo sí paso el muro: me trepo como gato.' }, { s: 'boceto', t: '¿Miau?' }, { s: 'tito', t: '¡Jaja! Bueno, casi como tu gato.' }, q()]);
   }
   function talkAdivZ1() {
     if (S.f.wall) return talk([{ s: 'adivino', t: 'Hmph. Nos vemos en la Estación, Creador.' }]);
@@ -416,7 +592,7 @@
   }
   function useWall() {
     const n = interviews();
-    if (n < 3) return talk([{ s: 'piensa', t: `Si muevo bloques ahora, estaría adivinando. Llevo ${n} de 3 entrevistas.` }]);
+    if (n < 3) return talk([{ s: 'piensa', t: `Si muevo bloques ahora, estaría adivinando. Llevo ${n} de 3 entrevistas.` }], () => catGuide(null, '¡Miau! Falta hablar con alguien.'));
     startSoko();
   }
 
@@ -455,11 +631,11 @@
     const wasBlocked = k.warned; k.warned = stallBlocked(k);
     if (k.warned && !wasBlocked) toast('Así tapas el puesto de Don Mario. Eso era justo lo que no quería.');
     sokoHud();
-    if (stored(k) === 3) { k.done = true; k.cut = 0; toast('¡Calle despejada! Mira a Doña Rosa.'); }
+    if (stored(k) === 3) { k.done = true; k.cut = 0; toast('¡Calle despejada! Mira a Doña Rosa.'); S.cat.rub = 2; catHearts(4); }
   }
   function sokoUndo() { const k = S.soko; if (!k || k.done || !k.hist.length) return; const h = k.hist.pop(); k.px = h.px; k.py = h.py; k.bl = h.bl; k.prev = null; k.tw = 1; k.warned = stallBlocked(k); sokoHud(); }
   function sokoReset() { const k = S.soko; if (!k || k.done) return; k.resets++; k.bl = k.init.bl.map(b => ({ ...b })); k.px = k.init.px; k.py = k.init.py; k.hist = []; k.prev = null; k.tw = 1; k.warned = false; sokoHud(); }
-  function sokoHint() { const k = S.soko; if (!k || k.done) return; const has = (x, y) => k.bl.some(b => b.x === x && b.y === y); toast(has(6, 2) && has(6, 3) ? 'Mueve el bloque del medio a un lado para llegar al de abajo.' : 'Ponte junto a un bloque y empújalo hacia un rincón punteado.'); }
+  function sokoHint() { const k = S.soko; if (!k || k.done) return; const has = (x, y) => k.bl.some(b => b.x === x && b.y === y); catSay('¡Miau!', 1.6); catHearts(1, 'note'); toast(CAT_NAME + ': ' + (has(6, 2) && has(6, 3) ? 'mueve el bloque del medio a un lado para llegar al de abajo.' : 'ponte junto a un bloque y empújalo hacia un rincón punteado.')); }
   function sokoWin() {
     hideMgbar(); S.f.wall = true; S.soko = null; S.mode = 'world'; zone1After(); updObj(); S.fade = 1;
     talk([
@@ -499,6 +675,7 @@
     if (k.done) { const c = Math.min(1, k.cut), rx = ox + 0.5 * cs + c * 11.6 * cs, ry = oy + 2.5 * cs; drawCart(rx + 24, ry + 2, 14); drawCreature('rosa', rx, ry, 15, { seed: 1, moving: c < 1, look: [1, 0] }); if (c >= 1) bubble('¡Llegué al mercado!', rx, ry - 26, COL.evid); }
     else { drawCart(ox + 0.5 * cs + 24, oy + 2.5 * cs + 2, 14); drawCreature('rosa', ox + 0.5 * cs, oy + 2.5 * cs, 15, { seed: 1, look: [1, 0] }); }
     drawCreature('player', PX, PY, 17, { seed: 0, moving: k.tw < 1, look: [k.face, 0] });
+    drawCatAt(); drawCatOverlay();
     if (k.warned && !k.done) { rr(W / 2 - 230, oy - 64, 460, 34, 10, 'rgba(210,72,58,.95)', OUT, 2.5); txt('Ese bloque tapa el puesto de Don Mario. Muévelo a un rincón.', W / 2, oy - 47, '700 14px ' + FONT, COL.white); }
   }
 
@@ -589,7 +766,7 @@
   }
   function useTablero() {
     if (S.f.tiles) return talk([{ s: 'piensa', t: 'Las rutas ya funcionan, y el tablero lo confirma.' }]);
-    if (!S.f.metricas) return talk([{ s: 'piensa', t: 'Antes de cambiar rutas quiero entender qué está fallando y cuánto. El jefe de estación tiene los números.' }]);
+    if (!S.f.metricas) return talk([{ s: 'piensa', t: 'Antes de cambiar rutas quiero entender qué está fallando y cuánto. El jefe de estación tiene los números.' }], () => catGuide(null, '¡Miau! Él tiene los números.'));
     startTiles();
   }
 
@@ -627,6 +804,21 @@
       walkers: [{ o: '1', dir: 'R', name: 'Don Ernesto', ck: 'ernesto', max: 10 }, { o: '2', dir: 'R', name: 'Doña Rosa', ck: 'rosa', noStairs: true }], dest: 'Andenes', maxArrows: 4
     }
   ];
+  // Pistas de Boceto para cada puzzle: casilla, flecha sugerida y explicación (comprobadas con las soluciones).
+  const TILE_HINTS = [
+    [{ c: '2,2', d: 'U', t: 'La fila de arriba no tiene escaleras. Quita la flecha morada de esta casilla y pon una que suba.' },
+     { c: '8,0', d: 'D', t: 'Al final de la fila de arriba, una flecha hacia abajo lleva directo al Valle. Quita las moradas que estorben en esa fila.' }],
+    [{ c: '4,2', d: 'R', t: 'Aquí se cruzan los dos caminos: una sola flecha a la derecha guía a los dos hasta los Andenes.' },
+     { c: '2,2', d: 'R', t: 'Don Ernesto baja por la flecha morada de arriba (esa sí servía) y aquí gira a la derecha. No todas las moradas estaban mal: pruébalas antes de quitarlas.' }]
+  ];
+  function tilesHint() {
+    const t = S.tiles; if (!t || t.sim) return;
+    t.hintN = Math.min((t.hintN || 0) + 1, TILE_HINTS[t.i].length);
+    const h = TILE_HINTS[t.i][t.hintN - 1];
+    catSay('¡Miau!', 1.6); catHearts(1, 'note');
+    setStatus(`<b>${CAT_NAME} señala una casilla:</b> ${esc(h.t)}`);
+    if (t.hintN >= TILE_HINTS[t.i].length) { const b = $('bTilesHint'); if (b) b.hidden = true; }
+  }
   function tilesGeom() { const cs = 68; return { cs, cols: 9, rows: 5, ox: (W - 9 * cs) / 2, oy: 152 }; }
   function usedArrows(t) { return Object.values((t || S.tiles).arrows).filter(a => !a.adiv).length; }
   function startTiles() { S.mode = 'tiles'; S.tiles = { i: 0, fails: 0 }; showMgbar('tiles'); loadPuzzle(0); }
@@ -639,7 +831,8 @@
   <div class="row"><button class="btn primary" data-act="ok" data-primary>${first ? 'Diseñar la ruta' : 'Volver al tablero'}</button></div>`, { actions: { ok: closeModal } });
   }
   function loadPuzzle(i) {
-    const t = S.tiles, P = TP[i]; t.i = i; t.P = P; t.sim = null; t.result = null;
+    const t = S.tiles, P = TP[i]; t.i = i; t.P = P; t.sim = null; t.result = null; t.hintN = 0; t.fails = 0;
+    const hb = $('bTilesHint'); if (hb) hb.hidden = true;
     t.cells = P.grid.map(r => [...r]);
     t.origins = {}; t.cells.forEach((row, y) => row.forEach((ch, x) => { if (ch === '1' || ch === '2') t.origins[ch] = { x, y }; }));
     resetArrows();
@@ -709,6 +902,7 @@
     const t = S.tiles; t.fails++;
     const f = t.result.walkers.find(w => w.state !== 'ok');
     setStatus(`<b>${esc(f.name)}:</b> «${esc(f.msg)}» Ajusta tus flechas y vuelve a testear.`);
+    if (t.fails >= 2 && (t.hintN || 0) < TILE_HINTS[t.i].length) { const hb = $('bTilesHint'); if (hb && hb.hidden) { hb.hidden = false; catSay('¡Miau! ¿Te ayudo?', 3.5); } }
     if (!S.les.includes('D')) talk([{ s: 'piensa', t: 'No llegó… pero al observar la prueba vi exactamente en qué casilla falló mi diseño.' }, { s: 'piensa', t: 'Así funciona: pruebo con la gente, veo dónde falla, lo ajusto y vuelvo a medir.' }, () => addLes('D')]);
   }
   function puzzleOk() {
@@ -716,6 +910,7 @@
     const before = METRICS[S.mstage || 0]; S.mstage = Math.min(2, t.i + 1); const m = METRICS[S.mstage];
     setStatus(`<b>¡Funcionó!</b> Tablero de la Estación: ${before.ok} → ${m.ok} de cada 100 llegan a su destino.`);
     toast(`Tablero: ${before.ok} → ${m.ok} de cada 100 llegan a su destino`);
+    S.cat.rub = 2; catHearts(3);
     const L = [];
     if (t.i === 0) L.push({ s: 'rosa', t: '¡Llegué al andén del Valle sin escaleras y con solo tres señales claras! Gracias, joven.' });
     if (t.i === 1) L.push(
@@ -790,7 +985,7 @@
   }
   function pzIntro(ph) {
     const info = {
-      strike: { t: 'La huelga', steps: ['El Adivino llena la plaza de inventos absurdos sin preguntar, y el pueblo entra en huelga.', '<b>Acércate a un invento</b> (con clic o WASD) para ver su queja y usa los <b>botones de abajo (o las teclas 1, 2 y 3)</b> para darle el arreglo correcto.', 'Esquiva las visiones moradas del Adivino y no dejes que el estrés del pueblo llegue al máximo.'] }
+      strike: { t: 'La huelga', steps: ['El Adivino llena la plaza de inventos absurdos sin preguntar, y el pueblo entra en huelga.', '<b>Acércate a un invento</b> (con clic o WASD) para ver su queja y usa los <b>botones de abajo (o las teclas 1, 2 y 3)</b> para darle el arreglo correcto.', 'Esquiva las visiones moradas del Adivino y no dejes que el estrés del pueblo llegue al máximo.', `Las visiones y los inventos acumulados te quitan <b>fuerzas</b>: con pocas fuerzas te mueves más lento. Si ${CAT_NAME} te ve agotado, irá a ayudarte.`] }
     }[ph];
     showModal(`<div class="eyebrow">Tiempo 3 · La Plaza</div><h2>${info.t}</h2><ol class="steps">${info.steps.map(s => `<li>${s}</li>`).join('')}</ol><div class="row"><button class="btn primary" type="button" data-act="go" data-primary>Empezar</button></div>`, { actions: { go: () => { closeModal(); pzStart(ph); } } });
   }
@@ -808,9 +1003,10 @@
   }
   function pzFix(i, type) {
     const z = S.pz; if (!z || z.paused || z.stun > 0 || i.fixed || z.cool > 0) return;
-    if (i.type === type) { i.fixed = true; z.fixed++; z.stress = Math.max(0, z.stress - 6); z.sel = null; pzFx('¡Arreglado!', i.x, i.y - 34, '#7fd8b2'); }
-    else { z.cool = 0.5; z.stress = Math.min(100, z.stress + 5); S.duel.shake = 6; pzFx('Eso no responde a la queja', i.x, i.y - 34, '#ff8a73'); }
+    if (i.type === type) { i.fixed = true; z.fixed++; z.stress = Math.max(0, z.stress - 6); pzEnergy(3); z.sel = null; pzFx('¡Arreglado!', i.x, i.y - 34, '#7fd8b2'); }
+    else { z.cool = 0.5; z.stress = Math.min(100, z.stress + 5); pzEnergy(-6); S.duel.shake = 6; pzFx('Eso no responde a la queja', i.x, i.y - 34, '#ff8a73'); }
   }
+  function pzEnergy(n) { const z = S.pz; if (z) z.energy = Math.max(0, Math.min(100, (z.energy == null ? 100 : z.energy) + n)); }
   function plazaClick(mx, my) {
     const z = S.pz; if (!z || z.paused || S.modal || D.on) return;
     const c = (z.chips || []).find(c => mx >= c.x && mx <= c.x + c.w && my >= c.y && my <= c.y + c.h);
@@ -841,6 +1037,8 @@
     const z = S.pz; opt = opt || {};
     Object.assign(z, { phase: ph, t: 0, items: [], shots: [], orbs: [], chips: [], sel: null, everSel: false, spawnT: 0, orbT: 2, cool: 0, stun: 0, paused: false, failed: false, won: false, banner: null });
     if (ph === 'team') z.stress = Math.min(z.stress || 0, 70); else z.stress = 0;
+    z.energy = ph === 'team' ? Math.max(z.energy == null ? 100 : z.energy, 80) : 100; z.catCd = 0; z.calm = null;
+    if (S.cat.mode !== 'follow') S.cat.mode = 'follow';
     if (ph === 'persona') { z.goal = 5; z.got = []; S.p.y = 515; setHud('Tiempo 3 · Arma la User Persona', null); }
     if (ph === 'strike') {
       z.wave = opt.wave || 1; z.spawned2 = 0; z.fixed = 0; z.queue = z.wave === 1 ? ['paso', 'letrero', 'altura'] : []; z.dilemma = false; S.p.y = 420;
@@ -876,8 +1074,8 @@
     let best = null, bd = 75;
     z.items.forEach(i => { if (i.fixed || i.warn > 0) return; const d = Math.hypot(i.x - S.p.x, i.y - S.p.y); if (d < bd) { bd = d; best = i; } });
     if (!best) { pzFx('Acércate a un invento', S.p.x, S.p.y - 40, '#ffcf70'); return; }
-    if (FIX[best.type].key === n) { best.fixed = true; z.fixed++; z.stress = Math.max(0, z.stress - 6); pzFx('¡Arreglado!', best.x, best.y - 34, '#7fd8b2'); }
-    else { z.cool = 0.5; z.stress = Math.min(100, z.stress + 5); S.duel.shake = 6; pzFx('Eso no responde a la queja', best.x, best.y - 34, '#ff8a73'); }
+    if (FIX[best.type].key === n) { best.fixed = true; z.fixed++; z.stress = Math.max(0, z.stress - 6); pzEnergy(3); pzFx('¡Arreglado!', best.x, best.y - 34, '#7fd8b2'); }
+    else { z.cool = 0.5; z.stress = Math.min(100, z.stress + 5); pzEnergy(-6); S.duel.shake = 6; pzFx('Eso no responde a la queja', best.x, best.y - 34, '#ff8a73'); }
   }
   function pzMove(dt) {
     const p = S.p, z = S.pz; p.moving = false; if (z.stun > 0) return;
@@ -886,7 +1084,8 @@
     if (vx || vy) p.tx = null;
     else if (p.tx != null) { const dx = p.tx - p.x, dy = free ? (p.ty - p.y) : 0, d = Math.hypot(dx, dy); if (d < 5) p.tx = null; else { vx = dx / d; vy = dy / d; } }
     const l = Math.hypot(vx, vy); if (!l) return;
-    const sp = 4.4 * dt; p.x = Math.max(24, Math.min(W - 24, p.x + vx / l * sp));
+    const tired = z.phase === 'strike' && z.energy != null ? 0.55 + 0.45 * z.energy / 100 : 1;
+    const sp = 4.4 * tired * dt; p.x = Math.max(24, Math.min(W - 24, p.x + vx / l * sp));
     if (free) p.y = Math.max(228, Math.min(556, p.y + vy / l * sp));
     if (vx) p.face = Math.sign(vx); p.moving = true;
   }
@@ -944,10 +1143,15 @@
       } else {
         z.spawnT -= s; if (z.spawnT <= 0) { z.spawnT = 0.6; pzSpawnInv(); }
         z.orbT -= s; if (z.orbT <= 0) { z.orbT = 1.6; pzOrb(); }
-        if ((z.stress >= 82 || z.waveT > 16) && !z.dilemma) { z.dilemma = true; pzDilemma(); return; }
+        if ((z.stress >= 82 || z.waveT > 16) && !z.dilemma) { z.dilemma = true; pzCalm(); return; }
       }
+      // Fuerzas del Creador: se gastan con los inventos acumulados (y más en la oleada 3).
+      const pend = z.items.filter(i => !i.fixed && i.warn <= 0).length;
+      pzEnergy(-((pend > 1 ? (pend - 1) * 1.1 : 0) + (z.wave === 3 ? 2.4 : 0)) * s);
+      if (z.catCd > 0) z.catCd -= s;
+      if (z.wave < 3 && z.energy < 35 && !(z.catCd > 0) && S.cat.mode === 'follow') { z.catCd = 15; S.cat.mode = 'assist'; catSay('¡Miau!', 1.2); }
     } else if (z.phase === 'team') {
-      z.teamT += s;
+      z.teamT += s; pzEnergy(5 * s);
       if (z.teamT < 18) { z.spawnT -= s; if (z.spawnT <= 0) { z.spawnT = 0.75; pzSpawnInv(); } z.orbT -= s; if (z.orbT <= 0) { z.orbT = 2.4; pzOrb(); } }
       updHelpers(s);
       if (z.teamT >= 18 && !z.items.some(i => !i.fixed)) pzWin();
@@ -960,7 +1164,7 @@
     z.items = z.items.filter(i => !(i.fixed && i.fixT > 1.2));
     const active = z.items.filter(i => !i.fixed && i.warn <= 0).length;
     if (z.phase !== 'endA') z.stress = Math.max(0, Math.min(100, z.stress + active * (z.phase === 'team' ? 0.85 : 2.6) * s - (active === 0 ? 4 * s : 0)));
-    z.orbs.forEach(o => { o.x += o.vx * s; o.y += o.vy * s; if (z.stun <= 0 && Math.hypot(o.x - S.p.x, o.y - S.p.y) < 22) { o.dead = true; z.stun = 0.9; z.stress = Math.min(100, z.stress + 6); S.duel.shake = 10; pzFx('¡Una visión del Adivino te mareó!', S.p.x, S.p.y - 40, '#cbb9f2'); } });
+    z.orbs.forEach(o => { o.x += o.vx * s; o.y += o.vy * s; if (z.stun <= 0 && Math.hypot(o.x - S.p.x, o.y - S.p.y) < 22) { o.dead = true; z.stun = 0.9; z.stress = Math.min(100, z.stress + 6); if (z.phase === 'strike') pzEnergy(-14); S.duel.shake = 10; pzFx('¡Una visión del Adivino te mareó!', S.p.x, S.p.y - 40, '#cbb9f2'); } });
     z.orbs = z.orbs.filter(o => !o.dead && o.y < 620 && o.x > -20 && o.x < W + 20);
   }
   function updHelpers(s) {
@@ -997,15 +1201,38 @@
   <div class="dilemma"><button class="dbtn" type="button" data-act="a"><b>No vale la pena</b><span>Lo hago rápido, a mi manera.</span></button><button class="dbtn" type="button" data-act="b"><b>Sí vale la pena…</b><span>pero no tengo que hacerlo solo.</span></button></div>`,
       { kind: 'dilema', actions: { a: () => { closeModal(); pzChooseA(); }, b: () => { closeModal(); pzChooseB(); } } });
   }
-  function pzChooseA() { const z = S.pz; z.paused = false; z.phase = 'endA'; z.endT = 0; z.endDone = false; z.spawnT = 0; S.duel.mirror = true; z.banner = { txt: 'A tu manera…', t0: 0 }; pzMgbar(); setHud('Tiempo 3 · A tu manera', null); }
-  function pzChooseB() {
+  // Antes del dilema: la plaza se detiene, Boceto se acerca y el Creador recupera fuerzas para decidir con calma.
+  function pzCalm() {
+    const z = S.pz; z.paused = true; z.orbs = []; z.sel = null; z.stun = 0; z.calm = { t: 0, phase: 'approach' };
+    K.left = K.right = K.up = K.down = false; S.p.tx = null; S.p.moving = false;
+    S.cat.mode = 'calm'; S.cat.bub = null; hideMgbar();
+    setHud('Tiempo 3 · Una pausa', null);
+  }
+  function pzCalmTalk() {
     const z = S.pz;
+    talk([
+      { s: 'piensa', t: 'Arreglo uno y él hace diez. Ya no doy más… me tiemblan las manos.' },
+      { s: 'boceto', t: 'Miau.' },
+      { s: 'piensa', t: CAT_NAME + '… Se me sube a las piernas, como cuando me quedo hasta tarde terminando un proyecto.' },
+      { s: 'boceto', t: 'Prrrr… prrrr…' },
+      { s: 'piensa', t: 'Respiro con él. Inhalo… exhalo. El ruido de la plaza se oye más lejos.' },
+      () => { z.energy = Math.max(z.energy, 85); },
+      { s: 'piensa', t: CAT_NAME + ' no arregla nada de la plaza. Pero estando aquí, ya no me siento solo.' },
+      { s: 'piensa', t: 'Con la cabeza más tranquila, ahora sí puedo pensarlo bien.' }
+    ], () => {
+      z.energy = 100; if (z.calm) z.calm.phase = 'done'; toast('Recuperaste tus fuerzas');
+      setTimeout(() => { if (S.pz === z && z.calm) pzDilemma(); }, 600);
+    });
+  }
+  function pzChooseA() { const z = S.pz; z.calm = null; S.cat.mode = 'away'; S.cat.rub = 0; z.paused = false; z.phase = 'endA'; z.endT = 0; z.endDone = false; z.spawnT = 0; S.duel.mirror = true; z.banner = { txt: 'A tu manera…', t0: 0 }; pzMgbar(); setHud('Tiempo 3 · A tu manera', null); }
+  function pzChooseB() {
+    const z = S.pz; z.calm = null; S.cat.mode = 'follow'; S.cat.rub = 1.5; catHearts(3);
     talk([{ s: 'creador', t: 'Sí vale la pena. Pero no tengo que hacerlo solo. ¡Pueblo! Ustedes saben lo que necesitan: ¿lo arreglamos juntos?' }], () => {
       const keep = z.items.filter(i => !i.fixed); pzStart('team'); z.items = keep;
       [['rosa', '¡Yo despejo los pasos!'], ['mario', '¡Yo hago los letreros!'], ['tito', '¡Yo ajusto las alturas!'], ['taq', '¡Yo llevo la cuenta para que nadie se agobie!'], ['ernesto', 'Yo cronometro. Rápido.']].forEach(([k, t], i) => { const c = PZ_CROWD.find(c => c[0] === k); pzFx(t, c[1] < 480 ? c[1] + 70 : (c[1] > 480 ? c[1] - 70 : c[1]), c[2] + 44, '#ffffff', { life: 2.8, t: -i * 0.7, bubble: true }); });
     });
   }
-  function pzEndA() { S.pz.paused = true; talk([{ s: 'adivino', t: '¡Por fin lo entiendes! ¡Bienvenido a mi bando, colega!' }, { s: 'rosa', t: 'Ay, joven… usted también.' }, { s: 'piensa', t: 'Miré la bola… y ya no aparecía el Adivino. Aparecía yo.' }], showEndA); }
+  function pzEndA() { S.pz.paused = true; talk([{ s: 'adivino', t: '¡Por fin lo entiendes! ¡Bienvenido a mi bando, colega!' }, { s: 'rosa', t: 'Ay, joven… usted también.' }, { s: 'piensa', t: 'Hasta ' + CAT_NAME + ' se fue a sentar lejos de mí.' }, { s: 'piensa', t: 'Miré la bola… y ya no aparecía el Adivino. Aparecía yo.' }], showEndA); }
   function pzEndB() {
     hideMgbar();
     talk([
@@ -1017,6 +1244,10 @@
       { s: 'adivino', t: '¿Y cómo se hace… sin bola?' }, () => { S.duel.notebook = true; },
       { s: 'creador', t: 'Se pregunta. Y se diseña con ellos, en equipo. Toma, te regalo mi libreta.' },
       { s: 'adivino', t: '¿Puedo… ayudar?' },
+      () => { S.cat.mode = 'visit'; S.cat.guide = { x: 470, y: 236 }; },
+      { s: 'boceto', t: 'Miau.' },
+      () => { S.cat.rub = 4; catHearts(4); },
+      { s: 'piensa', t: CAT_NAME + ' fue hasta la tarima y se le frotó contra la túnica. Creo que eso es un sí.' },
       { s: 'creador', t: 'Claro. Todo lo que creamos es para alguien. Y nadie lo crea solo.' }
     ], showEnd);
   }
@@ -1097,14 +1328,30 @@
       ctx.font = '700 12px ' + FONT; const cw = ctx.measureText(chant).width + 24;
       rr(W / 2 - cw / 2, 201, cw, 22, 11, 'rgba(42,34,56,0.88)', '#d2483a', 2); txt(chant, W / 2, 212.5, '700 12px ' + FONT, '#ff9c86');
     }
-    const p = S.p; drawCreature('player', p.x, p.y, 17, { seed: 0, moving: p.moving, look: [p.face, -0.3], talking: D.on && D.spk === 'creador' && D.typing });
-    if (z.stun > 0) { for (let k = 0; k < 3; k++) { const a = S.t * 0.2 + k * 2.1; star(p.x + Math.cos(a) * 16, p.y - 26 + Math.sin(a) * 5, 5, '#ffd36b'); } }
+    const p = S.p, catBehind = S.cat.y <= p.y;
+    if (z.calm) { const a = Math.min(1, z.calm.t * 1.2) * 0.62, g = ctx.createRadialGradient(p.x, p.y - 6, 50, p.x, p.y - 6, 520); g.addColorStop(0, 'rgba(27,26,43,0)'); g.addColorStop(1, `rgba(27,26,43,${a})`); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); }
+    if (catBehind) drawCatAt();
+    drawCreature('player', p.x, p.y, 17, { seed: 0, moving: p.moving, look: [p.face, -0.3], talking: D.on && D.spk === 'creador' && D.typing });
+    if (!catBehind) drawCatAt();
+    const en = z.energy == null ? 100 : z.energy;
+    if (z.phase === 'strike' && en < 30 && !z.calm) { for (let k = 0; k < 2; k++) { const ph = (S.t * 0.03 + k * 0.5) % 1; ctx.globalAlpha = 1 - ph; ctx.beginPath(); const dx = p.x + (k ? 14 : -14), dy = p.y - 22 + ph * 14; ctx.moveTo(dx, dy - 5); ctx.quadraticCurveTo(dx + 4, dy + 1, dx, dy + 3); ctx.quadraticCurveTo(dx - 4, dy + 1, dx, dy - 5); ctx.fillStyle = '#8cc3dd'; ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 1.2; ctx.stroke(); ctx.globalAlpha = 1; } }
+    if (z.phase === 'strike' || z.phase === 'team' || z.calm) {
+      const glow = z.calm && z.calm.phase !== 'approach', bx = z.calm ? W / 2 - 118 : 14, by = z.calm ? 232 : 562;
+      rr(bx, by, 236, 30, 15, 'rgba(42,34,56,.92)', glow ? CAT.eye : OUT, glow ? 3 : 2);
+      drawCat(bx + 22, by + 18, { s: 0.62, sit: true, happy: glow, purr: glow, seed: 3 });
+      txt('Tus fuerzas', bx + 80, by + 15.5, '700 12px ' + FONT, COL.cream);
+      rr(bx + 124, by + 9, 100, 12, 6, '#3b3152');
+      if (en > 0) rr(bx + 124, by + 9, Math.max(6, en), 12, 6, en > 55 ? '#4cc38a' : (en > 30 ? '#f39c33' : '#d2483a'));
+    }
+    if (z.stun > 0 && !z.calm) { for (let k = 0; k < 3; k++) { const a = S.t * 0.2 + k * 2.1; star(p.x + Math.cos(a) * 16, p.y - 26 + Math.sin(a) * 5, 5, '#ffd36b'); } }
     z.fx.forEach(f => {
       if (f.t < 0) return; const a = Math.max(0, 1 - f.t / f.life); ctx.globalAlpha = a;
       if (f.bubble) { bubble(f.txt, f.x, f.y, COL.evid); }
       else { ctx.font = '700 14px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 4; ctx.strokeStyle = OUT; ctx.strokeText(f.txt, f.x, f.y - f.t * 30); ctx.fillStyle = f.c; ctx.fillText(f.txt, f.x, f.y - f.t * 30); }
       ctx.globalAlpha = 1;
     });
+    drawCatOverlay();
+    if (z.calm && z.calm.phase !== 'approach' && !D.on) { rr(W / 2 - 150, 300, 300, 40, 14, 'rgba(42,34,56,.9)', CAT.eye, 2.5); txt('Respira…', W / 2, 321, '700 18px ' + FONT_D, COL.cream); }
     if ((z.phase === 'strike' || z.phase === 'team') && !z.paused) {
       if (z._near) { const i = z._near; z.everSel = true; chipRow(i.x, Math.min(556, i.y + 28), [{ label: FIX.paso.n, color: FIX.paso.c, fn: () => pzFix(i, 'paso') }, { label: FIX.letrero.n, color: FIX.letrero.c, fn: () => pzFix(i, 'letrero') }, { label: FIX.altura.n, color: FIX.altura.c, fn: () => pzFix(i, 'altura') }]); }
       else if (!z.everSel) { const it = z.items.find(i => !i.fixed && i.warn <= 0); if (it) bubble('Acércate al invento', it.x, it.y - 84 + Math.sin(S.t * 0.15) * 3, '#ffcf70'); }
@@ -1266,7 +1513,7 @@
   }
   function retryDilemma() {
     closeModal(); S.mode = 'plaza'; S.duel.mirror = false;
-    const z = S.pz; z.phase = 'strike'; z.wave = 3; z.stress = 82; z.endDone = false; z.dilemma = true;
+    const z = S.pz; z.phase = 'strike'; z.wave = 3; z.stress = 82; z.endDone = false; z.dilemma = true; z.energy = 100; z.calm = null; S.cat.mode = 'follow';
     setHud('Tiempo 3 · La huelga', null); pzMgbar(); pzDilemma();
   }
   function showEndA() {
@@ -1295,7 +1542,7 @@
     if (kind === 'soko') {
       mgbar.innerHTML = `<div class="legend3"><span><i class="sw lane"></i>Rosa: el centro de la calle, libre</span><span><i class="sw nook"></i>Tito: rincones donde guardar bloques</span><span><i class="sw stall"></i>Mario: no tapar su puesto</span></div>
     <div class="pad"><button class="pbtn u" type="button" data-m="0,-1" aria-label="Arriba">↑</button><button class="pbtn l" type="button" data-m="-1,0" aria-label="Izquierda">←</button><button class="pbtn d" type="button" data-m="0,1" aria-label="Abajo">↓</button><button class="pbtn r" type="button" data-m="1,0" aria-label="Derecha">→</button></div>
-    <div class="mg-actions"><button class="btn" type="button" id="bUndo">Deshacer (Z)</button><button class="btn" type="button" id="bReset">Reiniciar (R)</button><button class="btn" type="button" id="bHint" hidden>Pista</button><button class="btn" type="button" id="bHelp">Cómo se juega</button></div>`;
+    <div class="mg-actions"><button class="btn" type="button" id="bUndo">Deshacer (Z)</button><button class="btn" type="button" id="bReset">Reiniciar (R)</button><button class="btn" type="button" id="bHint" hidden>Pista de ${CAT_NAME}</button><button class="btn" type="button" id="bHelp">Cómo se juega</button></div>`;
       mgbar.querySelectorAll('.pbtn').forEach(b => b.addEventListener('click', () => { const [dx, dy] = b.dataset.m.split(',').map(Number); sokoMove(dx, dy); b.blur(); }));
       $('bUndo').addEventListener('click', e => { sokoUndo(); e.currentTarget.blur(); });
       $('bReset').addEventListener('click', e => { sokoReset(); e.currentTarget.blur(); });
@@ -1303,7 +1550,7 @@
       $('bHelp').addEventListener('click', () => sokoHelp(false));
     } else {
       mgbar.innerHTML = `<div class="legend"><span><i style="background:#3fae7c"></i>Tus flechas</span><span><i style="background:${COL.adiv}"></i>Mirador y rutas del Adivino</span><span><i style="background:${COL.evid}"></i>Destino</span><span><i style="background:${COL.stairs}"></i>Escaleras</span><span><i style="background:${COL.rock}"></i>Roca</span></div>
-    <div class="mg-actions"><button class="btn primary" type="button" id="bTest">Testear (Enter)</button><button class="btn" type="button" id="bClear">Reiniciar puzzle</button><button class="btn" type="button" id="bTilesHint" hidden>Pista</button><button class="btn" type="button" id="bHelp">Cómo se juega</button></div>
+    <div class="mg-actions"><button class="btn primary" type="button" id="bTest">Testear (Enter)</button><button class="btn" type="button" id="bClear">Reiniciar puzzle</button><button class="btn" type="button" id="bTilesHint" hidden>Pista de ${CAT_NAME}</button><button class="btn" type="button" id="bHelp">Cómo se juega</button></div>
     <p id="mgStatus" class="status"></p>`;
       $('bTest').addEventListener('click', e => { testear(); e.currentTarget.blur(); });
       $('bClear').addEventListener('click', e => { if (S.tiles && !S.tiles.sim) { resetArrows(); setStatus('Puzzle reiniciado. Diseña la ruta y presiona <b>Testear</b>.'); } e.currentTarget.blur(); });
@@ -1368,9 +1615,12 @@
   function drawWorld() {
     if (S.zone === 1) drawZ1(); else if (S.zone === 2) drawZ2(); else drawZ3();
     const near = (S.mode === 'world' && !D.on && !S.modal) ? nearest() : null;
-    const list = S.ents.filter(visible).map(e => ({ e, y: e.y })).concat([{ p: true, y: S.p.y }]).sort((a, b) => a.y - b.y);
-    list.forEach(o => o.p ? drawPlayer() : drawEnt(o.e, o.e === near));
+    drawCatTrail();
+    const list = S.ents.filter(visible).map(e => ({ e, y: e.y })).concat([{ p: true, y: S.p.y }, { cat: true, y: S.cat.y }]).sort((a, b) => a.y - b.y);
+    list.forEach(o => o.p ? drawPlayer() : (o.cat ? drawCatAt() : drawEnt(o.e, o.e === near)));
+    drawCatOverlay();
     if (near) drawPrompt(near);
+    else if (catCanPet()) drawCatPrompt();
     if (S.p.tx != null && S.mode === 'world') { ctx.save(); ctx.setLineDash([3, 4]); circle(S.p.tx, S.p.ty, 9, null, '#ffcf70', 2.5); ctx.restore(); }
   }
   function title(a, b) { rr(210, 22, 540, b ? 100 : 56, 14, 'rgba(42,34,56,.9)', OUT, 2.5); txt(a, W / 2, 46, '700 24px ' + FONT_D, '#ffcf70'); if (b) { const ls = wrapLines(b, '16px ' + FONT, 500); ls.forEach((l, i) => txt(l, W / 2, 78 + i * 20, '16px ' + FONT, COL.cream)); } }
@@ -1396,6 +1646,13 @@
       if (a.adiv) { rr(cx - 27, cy - 27, 54, 54, 8, 'rgba(122,79,201,.18)'); drawArrow(cx, cy, a.d, COL.adiv, 44); circle(cx + 19, cy - 19, 6, COL.white, COL.adiv, 2); }
       else drawArrow(cx, cy, a.d, '#3fae7c', 44);
     }
+    TILE_HINTS[t.i].slice(0, t.hintN || 0).forEach(h => {
+      const [x, y] = h.c.split(',').map(Number), cx = g.ox + (x + .5) * g.cs, cy = g.oy + (y + .5) * g.cs, mine = t.arrows[h.c] && !t.arrows[h.c].adiv && t.arrows[h.c].d === h.d;
+      const pr = Math.sin(S.t * 0.18) * 2;
+      rr(cx - 31 - pr, cy - 31 - pr, 62 + pr * 2, 62 + pr * 2, 10, null, mine ? COL.evid : CAT.dark, 3);
+      if (!mine) { ctx.globalAlpha = 0.4; drawArrow(cx, cy, h.d, '#3fae7c', 40); ctx.globalAlpha = 1; }
+      circle(cx + 22, cy + 22, 11, CAT.light, OUT, 2); drawPaw(cx + 22, cy + 23, 6, CAT.dark);
+    });
     let ws;
     if (t.sim) { const p = Math.min(1, t.sim.acc / STEP); ws = t.sim.walkers.map(w => ({ w, dx: w.fx + (w.x - w.fx) * p, dy: w.fy + (w.y - w.fy) * p })); }
     else if (t.result) ws = t.result.walkers.map(w => ({ w, dx: w.x, dy: w.y }));
@@ -1412,6 +1669,7 @@
     const badgeY = mw ? g.oy + g.rows * g.cs + 58 : g.oy + g.rows * g.cs + 24;
     rr(W / 2 - bw / 2, badgeY - 14, bw, 28, 10, 'rgba(42,34,56,.92)', atLimit ? '#f39c33' : '#3fae7c', 2);
     txt(badgeTxt, W / 2, badgeY, '700 13px ' + FONT, atLimit ? '#ffcf70' : COL.cream);
+    drawCatAt(); drawCatOverlay();
   }
   const CRACKS = [[[-.15, -.95], [-.02, -.5], [-.25, -.15], [0, .15]], [[.9, -.25], [.45, -.12], [.32, .22], [.05, .3]], [[-.85, .4], [-.42, .3], [-.22, .62], [.08, .92]]];
   function drawDuelV1() {
@@ -1497,7 +1755,8 @@
     const key = D.spk || 'piensa'; const sp = SPK[key] || SPK.piensa;
     const save = ctx; ctx = pctx; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, 120, 120);
     const c = CK[sp.k] || CK.c1; const g = ctx.createRadialGradient(60, 50, 10, 60, 60, 70); g.addColorStop(0, c.body + '88'); g.addColorStop(1, '#3b3152'); ctx.fillStyle = g; ctx.fillRect(0, 0, 120, 120);
-    if (sp.k === 'crowd') { drawCreature('c1', 36, 80, 18, { seed: 1 }); drawCreature('c3', 84, 82, 18, { seed: 2 }); drawCreature('c2', 60, 64, 17, { seed: 3 }); }
+    if (sp.k === 'cat') drawCat(60, 84, { s: 3, sit: true, face: 1, meow: D.typing, purr: /prr/i.test(D.full || ''), happy: /prr/i.test(D.full || '') });
+    else if (sp.k === 'crowd') { drawCreature('c1', 36, 80, 18, { seed: 1 }); drawCreature('c3', 84, 82, 18, { seed: 2 }); drawCreature('c2', 60, 64, 17, { seed: 3 }); }
     else { const isA = sp.k === 'adivino'; drawCreature(sp.k, 60, isA ? 80 : 66, isA ? 28 : 34, { seed: 0, talking: D.typing && !sp.think, big: true }); }
     if (sp.think) { circle(100, 20, 8, COL.white, OUT, 2); circle(88, 34, 4.5, COL.white, OUT, 1.5); }
     ctx = save;
@@ -1509,7 +1768,7 @@
     else if ((S.mode === 'plaza' || S.mode === 'end') && S.pz && S.zone === 3) drawPlaza();
     else if ((S.mode === 'duel' || S.mode === 'end') && S.zone === 3) drawDuel();
     else if (S.zone > 0) drawWorld();
-    else { drawZ1(); drawCreature('adivino', 560, 250, 24, { seed: 4 }); drawCreature('player', 380, 320, 18, { seed: 0, look: [1, 0] }); drawCreature('rosa', 470, 350, 15, { seed: 1 }); drawCart(496, 352, 15); }
+    else { drawZ1(); drawCreature('adivino', 560, 250, 24, { seed: 4 }); drawCreature('player', 380, 320, 18, { seed: 0, look: [1, 0] }); drawCreature('rosa', 470, 350, 15, { seed: 1 }); drawCart(496, 352, 15); drawCat(342, 334, { sit: true, face: 1, s: 1.1 }); }
     if (S.fade > 0) { ctx.fillStyle = `rgba(27,26,43,${S.fade})`; ctx.fillRect(0, 0, W, H); }
     if (D.on) drawPortrait();
   }
@@ -1525,7 +1784,7 @@
     });
   }
   function updWorld(dt) {
-    const p = S.p; p.moving = false;
+    const p = S.p; p.moving = false; p.idle += dt / 60;
     if (S.mode !== 'world' || D.on || S.modal) return;
     let vx = 0, vy = 0;
     if (K.left) vx -= 1; if (K.right) vx += 1; if (K.up) vy -= 1; if (K.down) vy += 1;
@@ -1536,6 +1795,7 @@
       const sp = (S.zone === 1 || S.zone === 2 ? 4.2 : 3.4) * dt, ox = p.x, oy = p.y; let nx = Math.max(14, Math.min(W - 14, p.x + vx / l * sp)), ny = Math.max(222, Math.min(398, p.y + vy / l * sp));
       if (S.zone === 1 && !S.f.wall && nx + p.r > 589 && nx - p.r < 653) nx = p.x;
       p.x = nx; p.y = ny; if (vx) p.face = Math.sign(vx); p.moving = Math.hypot(p.x - ox, p.y - oy) > 0.05;
+      if (p.moving) p.idle = 0;
       if (p.tx != null && !p.moving) p.tx = null;
     }
     if (p.goal && distTo(p.goal) < 30) { const e = p.goal; p.goal = null; p.tx = null; e.act(); return; }
@@ -1547,13 +1807,13 @@
     const ms = Math.max(0, Math.min(60, now - last)); last = now; const dt = ms / 16.667;
     S.t += dt;
     if (S.fade > 0) S.fade = Math.max(0, S.fade - ms / 450);
-    updTyping(ms); updEnts(dt); updWorld(dt);
+    updTyping(ms); updEnts(dt); updWorld(dt); updCat(dt, ms);
     if (S.mode === 'tiles' && S.tiles && S.tiles.sim) updSim(ms);
     if (S.mode === 'plaza' && S.pz && !S.modal && !D.on) updPlaza(dt, ms);
     else if (S.pz && S.pz.fx) { const s = ms / 1000; S.pz.fx.forEach(f => { if (f.t < 0) f.t += s; }); }
     if (S.soko) {
       if (S.soko.tw < 1) S.soko.tw = Math.min(1, S.soko.tw + ms / 120); if (S.soko.done) { S.soko.cut += ms / 2600; if (S.soko.cut >= 1.35 && !S.soko.won) { S.soko.won = true; sokoWin(); } }
-      if (S.soko && !S.soko.hintOn && !S.soko.done && !S.modal && (S.soko.resets >= 3 || S.t - S.soko.t0 > 5400)) { S.soko.hintOn = true; const hb = $('bHint'); if (hb) hb.hidden = false; }
+      if (S.soko && !S.soko.hintOn && !S.soko.done && !S.modal && (S.soko.resets >= 3 || S.t - S.soko.t0 > 5400)) { S.soko.hintOn = true; const hb = $('bHint'); if (hb) hb.hidden = false; catSay('¡Miau! Tengo una pista.', 4); }
     }
     if (S.duel) { if (S.duel.shake > 0) S.duel.shake -= dt; if (S.duel.shatter > 0 && S.duel.shatter < 40) S.duel.shatter += dt; }
     const compact = ['tiles', 'duel', 'end', 'plaza'].includes(S.mode);
@@ -1583,7 +1843,7 @@
     }
     if (S.mode === 'world') {
       if (KEYMAP[c]) { K[KEYMAP[c]] = true; e.preventDefault(); }
-      if ((c === 'KeyE' || c === 'Space' || c === 'Enter') && !e.repeat) { e.preventDefault(); const n = nearest(); if (n) n.act(); }
+      if ((c === 'KeyE' || c === 'Space' || c === 'Enter') && !e.repeat) { e.preventDefault(); const n = nearest(); if (n) n.act(); else if (catCanPet()) petCat(); }
     } else if (S.mode === 'soko') {
       const m = SOKO_DIR[KEYMAP[c]];
       if (m) { e.preventDefault(); const now = performance.now(); if (e.repeat && now - lastSoko < 130) return; lastSoko = now; sokoMove(m[0], m[1]); }
@@ -1608,6 +1868,7 @@
     if (S.mode === 'world') {
       const e = entAt(mx, my);
       if (e) { if (distTo(e) < 30) e.act(); else { S.p.goal = e; S.p.tx = e.x; S.p.ty = e.y; } }
+      else if (Math.hypot(mx - S.cat.x, my - (S.cat.y - 4)) < 22 && Math.hypot(S.cat.x - S.p.x, S.cat.y - S.p.y) < 60 && S.cat.mode === 'follow') petCat();
       else { S.p.goal = null; S.p.tx = mx; S.p.ty = Math.max(222, Math.min(398, my)); }
     } else if (S.mode === 'tiles') tilesClick(mx, my, ev.button === 2);
     else if (S.mode === 'plaza' && S.pz) plazaClick(mx, my);
@@ -1636,7 +1897,7 @@
   function restart() {
     closeModal(); hideMgbar(); dlg.hidden = true; D.on = false; D.q = []; D.cur = null; D.done = null; D.typing = false;
     S.mode = 'title'; S.zone = 0; S.f = {}; S.ev = []; S.mstage = 0; S.les = []; S.ents = []; S.duel = null; S.pz = null; S.soko = null; S.tiles = null; resetPlayer(70, 310);
-    bitCount.textContent = '0'; showTitle();
+    S.cat.petN = 0; bitCount.textContent = '0'; showTitle();
   }
   const startHash = (location.hash || '').toLowerCase();
   if (startHash === '#tiempo3') jumpTo(3);

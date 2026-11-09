@@ -18,6 +18,7 @@ Para probar una parte sin jugar las anteriores, usa los botones de **acceso dire
 | Acción | Cómo |
 |---|---|
 | Moverse | Flechas o WASD, o clic en el suelo |
+| Acariciar a Boceto | E o clic, quieto a su lado |
 | Hablar y continuar | E, Espacio o clic |
 | Abrir la Bitácora | B o el botón «Bitácora» |
 | Tiempo 3 (la Plaza) | Todo se juega con clic |
@@ -31,6 +32,18 @@ El Creador llega a un pueblo diseñado por **el Adivino**, que decide todo segú
 | 1 · Entrevistar | La Barrera Caprichosa | Preguntar bien y encontrar el problema detrás de la solución que pide la gente | Entrevistas con preguntas a elegir y un Sokoban para reacomodar el muro |
 | 2 · Medir y probar | La Estación colapsada | Leer las métricas sin culpar al usuario, probar con la gente y volver a medir | Tablero de métricas y puzzle de rutas con el botón «Testear» |
 | 3 · La Plaza | Confrontación con el Adivino | User Persona, evidencia contra opiniones y diseñar en equipo con los usuarios | User Persona, refutar supuestos, la huelga en tiempo real y un dilema con dos finales |
+
+## Boceto, el gato del Creador
+
+Boceto acompaña al Creador en todo el nivel y lo ayuda sin resolverle los retos:
+
+- **Te sigue** por el pueblo y puedes acariciarlo (E o clic) cuando te quedas quieto a su lado.
+- **Te muestra el camino** si pasan 20 segundos sin avanzar, o si intentas algo antes de tiempo (mover el muro sin las entrevistas, usar el Tablero sin ver los números).
+- **Da pistas** en los dos minijuegos: «Pista de Boceto» en el muro y en el Tablero de rutas, donde marca con una huella la casilla clave.
+- **Te devuelve las fuerzas** en el Tiempo 3. Durante la huelga tienes un medidor de **fuerzas**: las visiones y los inventos acumulados te cansan y te mueves más lento. Si te ve agotado, corre a ayudarte.
+- **La pausa antes de «¿Vale la pena?»:** la plaza se detiene, Boceto se acerca, ronronea y recuperas las fuerzas para decidir con calma.
+
+El nombre está en la constante `CAT_NAME` de `game.js`.
 
 ## Lecciones de la Bitácora
 
