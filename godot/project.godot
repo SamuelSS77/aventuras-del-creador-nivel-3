@@ -1,0 +1,28 @@
+; Engine configuration file.
+; Las aventuras del Creador · Nivel 3 — versión Godot 4.7 (C#).
+
+config_version=5
+
+[application]
+
+config/name="El Pueblo del Adivino"
+config/description="Las aventuras del Creador · Nivel 3 (Análisis de Usuario)"
+run/main_scene="res://Main.tscn"
+config/features=PackedStringArray("4.7", "C#", "Forward Plus")
+config/icon="res://icon.svg"
+
+[display]
+
+window/size/viewport_width=1000
+window/size/viewport_height=830
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+
+[dotnet]
+
+project/assembly_name="AventurasNivel3"
+
+[rendering]
+
+anti_aliasing/quality/msaa_2d=2
+environment/defaults/default_clear_color=Color(0.105882, 0.101961, 0.168627, 1)
