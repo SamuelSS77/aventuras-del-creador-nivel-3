@@ -98,8 +98,8 @@
      - *Oleada 1:* 3 inventos secuenciales (uno de cada tipo)[cite: 6].
      - *Oleada 2:* El Adivino acelera (8 inventos + orbes morados)[cite: 6].
      - *Oleada 3 (Desborde):* El Adivino spawnea inventos cada 0.6s («¡Tú arreglas uno y yo hago diez!»). Cuando el estrés llega a 82% (o pasan 16s), primero llega **la pausa de Boceto (`pzCalm`)** y después el **Dilema Final (`pzDilemma`)**.
-   - **Tus fuerzas (`S.pz.energy`, 0–100):** medidor del Creador en la esquina inferior izquierda. Bajan con cada orbe que te golpea (−14), cada arreglo equivocado (−6) y cada invento acumulado sin arreglar; en la oleada 3 bajan más rápido. Con pocas fuerzas el Creador camina más lento y le salen gotas de sudor. En las oleadas 1 y 2, si bajan de 35, Boceto corre hacia él y le devuelve +35 (una vez cada 15 s). En la fase En equipo se recuperan solas.
-   - **La pausa de Boceto (`pzCalm` → `pzCalmTalk`):** la plaza se congela y se oscurece alrededor del Creador, Boceto se le acerca, ronronea y la barra de fuerzas se llena mientras el Creador respira. Cierra con «Boceto no arregla nada de la plaza. Pero estando aquí, ya no me siento solo», que prepara la opción B sin decidir por el jugador.
+   - **Tu estrés (0–100):** medidor del Creador en la esquina inferior izquierda, aparte del Estrés del pueblo. En código se guarda como calma en `S.pz.energy` (estrés = 100 − energy). Sube con cada orbe que te golpea (+14), cada arreglo equivocado (+6) y cada invento acumulado sin arreglar; en la oleada 3 sube más rápido. Con mucho estrés el Creador camina más lento y le salen gotas de sudor. En las oleadas 1 y 2, si pasa de 65, Boceto corre hacia él y se lo baja 35 (una vez cada 15 s). En la fase En equipo baja solo.
+   - **La pausa de Boceto (`pzCalm` → `pzCalmTalk`):** la plaza se congela y se oscurece alrededor del Creador, Boceto se le acerca, ronronea y la barra de estrés baja mientras el Creador respira. Cierra con «Boceto no arregla nada de la plaza. Pero estando aquí, ya no me siento solo», que prepara la opción B sin decidir por el jugador.
 4. **Fase 4 — Dilema Final (`¿Vale la pena?`) y Dos Finales:**
    - **Opción A ("No vale la pena. Lo hago rápido, a mi manera") → `pzChooseA` / `showEndA` (Final 1 de 2: "El segundo Adivino"):**
      - Tus clics ahora crean más inventos egoístas ("A mi manera…"), la bola de cristal refleja la cara del Creador (`d.mirror = true`) y la huelga continúa. Permite **"Volver a elegir"** (`retryDilemma`)[cite: 6].
@@ -112,12 +112,12 @@
 ## 5. Boceto, el gato del Creador (`S.cat`)
 - **Quién es:** la mascota del Creador. Lo acompaña en todo el nivel y lo ayuda cuando hace falta, sin resolver los retos por él. El nombre está en la constante `CAT_NAME` (cambiarlo ahí lo cambia en todo el juego).
 - **Dibujo:** `drawCat()`, gato atigrado gris hecho con primitivas de canvas, con el mismo contorno `OUT` que el resto de personajes. Retrato propio en los diálogos (`SPK.boceto`).
-- **Modos (`S.cat.mode`):** `follow` (te sigue y se sienta cuando paras), `guide` (te muestra el siguiente paso y deja huellas), `assist` (corre a darte fuerzas en la huelga), `calm` (escena antes del dilema), `away` (se sienta lejos, triste, en el Final 1), `visit` (va hasta el Adivino en el Final 2), `perch` (mira desde un lado en los minijuegos 1 y 2).
+- **Modos (`S.cat.mode`):** `follow` (te sigue y se sienta cuando paras), `guide` (te muestra el siguiente paso y deja huellas), `assist` (corre a bajarte el estrés en la huelga), `calm` (escena antes del dilema), `away` (se sienta lejos, triste, en el Final 1), `visit` (va hasta el Adivino en el Final 2), `perch` (mira desde un lado en los minijuegos 1 y 2).
 - **Dónde ayuda:**
   - **Tiempos 1 y 2:** si pasan 20 s (`CAT_IDLE_HELP`) sin avanzar ni hablar con nadie, va hasta el siguiente objetivo (la persona que falta entrevistar, el muro, el jefe de estación, el Tablero o la salida) y maúlla. También lo hace al instante si intentas mover el muro sin las 3 entrevistas o usar el Tablero sin ver los números.
   - **Acariciar:** quieto 2,5 s con Boceto al lado aparece «Acariciar a Boceto» (E o clic). La primera vez dice: «Boceto siempre sabe cuándo necesito una pausa».
   - **Minijuego 1 (Sokoban):** cuando se activa la pista (3 reinicios o ~90 s), Boceto avisa y el botón se llama «Pista de Boceto».
   - **Minijuego 2 (Tablero de rutas):** tras 2 pruebas fallidas aparece «Pista de Boceto». Cada clic marca con una huella una casilla clave y la flecha sugerida (`TILE_HINTS`, dos pistas por puzzle, comprobadas contra las soluciones).
-  - **Tiempo 3:** medidor de fuerzas, ayuda en la huelga y la pausa antes de «¿Vale la pena?» (ver Fase 3).
+  - **Tiempo 3:** medidor de tu estrés, ayuda en la huelga y la pausa antes de «¿Vale la pena?» (ver Fase 3).
 - **Finales:** en el Final 1 se aleja y se sienta triste («Hasta Boceto se fue a sentar lejos de mí»). En el Final 2 va hasta la tarima y se frota contra el Adivino cuando este pregunta «¿Puedo… ayudar?».
 

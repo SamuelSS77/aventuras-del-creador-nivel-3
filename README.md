@@ -40,8 +40,8 @@ Boceto acompaña al Creador en todo el nivel y lo ayuda sin resolverle los retos
 - **Te sigue** por el pueblo y puedes acariciarlo (E o clic) cuando te quedas quieto a su lado.
 - **Te muestra el camino** si pasan 20 segundos sin avanzar, o si intentas algo antes de tiempo (mover el muro sin las entrevistas, usar el Tablero sin ver los números).
 - **Da pistas** en los dos minijuegos: «Pista de Boceto» en el muro y en el Tablero de rutas, donde marca con una huella la casilla clave.
-- **Te devuelve las fuerzas** en el Tiempo 3. Durante la huelga tienes un medidor de **fuerzas**: las visiones y los inventos acumulados te cansan y te mueves más lento. Si te ve agotado, corre a ayudarte.
-- **La pausa antes de «¿Vale la pena?»:** la plaza se detiene, Boceto se acerca, ronronea y recuperas las fuerzas para decidir con calma.
+- **Te baja el estrés** en el Tiempo 3. Durante la huelga tienes un medidor de **tu estrés**: sube con las visiones y los inventos acumulados, y con mucho estrés te mueves más lento. Si te ve muy estresado, corre a ayudarte.
+- **La pausa antes de «¿Vale la pena?»:** la plaza se detiene, Boceto se acerca, ronronea y tu estrés baja para que decidas con calma.
 
 El nombre está en la constante `CAT_NAME` de `game.js`.
 

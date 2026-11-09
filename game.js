@@ -364,7 +364,7 @@
   function resetPlayer(x, y) { S.p.x = x; S.p.y = y; S.p.tx = null; S.p.ty = null; S.p.goal = null; S.p.face = 1; S.p.idle = 0; catReset(x - 28, y + 10); }
 
   /* ---------- Boceto, el gato del Creador ---------- */
-  // Modos: follow (te sigue), guide (te muestra el siguiente paso), assist (corre a darte fuerzas),
+  // Modos: follow (te sigue), guide (te muestra el siguiente paso), assist (corre a bajarte el estrés),
   // calm (escena de calma antes del dilema), away (se aleja triste en el final 1), perch (mira los minijuegos).
   const CAT_IDLE_HELP = 20; // segundos sin avanzar antes de que Boceto te muestre el camino
   function catReset(x, y) { const c = S.cat; Object.assign(c, { x, y, face: 1, moving: false, mode: 'follow', sitT: 1, bub: null, guide: null, helpT: 0, rub: 0 }); c.trail = []; c.fx = []; }
@@ -449,7 +449,7 @@
     }
     if (c.mode === 'assist') {
       if (!z || z.paused || (z.phase !== 'strike' && z.phase !== 'team')) c.mode = 'follow';
-      else if (d < 18) { z.energy = Math.min(100, (z.energy || 0) + 35); c.mode = 'follow'; c.rub = 1.2; catHearts(3); catSay('Prrr…', 1.4); pzFx(CAT_NAME + ' ronronea · + fuerzas', p.x, p.y - 46, CAT.eye); }
+      else if (d < 18) { z.energy = Math.min(100, (z.energy || 0) + 35); c.mode = 'follow'; c.rub = 1.2; catHearts(3); catSay('Prrr…', 1.4); pzFx(CAT_NAME + ' ronronea · baja tu estrés', p.x, p.y - 46, CAT.eye); }
     }
     if (c.mode === 'calm' && z && z.calm) {
       const m = z.calm; m.t += s;
@@ -985,7 +985,7 @@
   }
   function pzIntro(ph) {
     const info = {
-      strike: { t: 'La huelga', steps: ['El Adivino llena la plaza de inventos absurdos sin preguntar, y el pueblo entra en huelga.', '<b>Acércate a un invento</b> (con clic o WASD) para ver su queja y usa los <b>botones de abajo (o las teclas 1, 2 y 3)</b> para darle el arreglo correcto.', 'Esquiva las visiones moradas del Adivino y no dejes que el estrés del pueblo llegue al máximo.', `Las visiones y los inventos acumulados te quitan <b>fuerzas</b>: con pocas fuerzas te mueves más lento. Si ${CAT_NAME} te ve agotado, irá a ayudarte.`] }
+      strike: { t: 'La huelga', steps: ['El Adivino llena la plaza de inventos absurdos sin preguntar, y el pueblo entra en huelga.', '<b>Acércate a un invento</b> (con clic o WASD) para ver su queja y usa los <b>botones de abajo (o las teclas 1, 2 y 3)</b> para darle el arreglo correcto.', 'Esquiva las visiones moradas del Adivino y no dejes que el estrés del pueblo llegue al máximo.', `Las visiones y los inventos acumulados te suben <b>tu estrés</b>: con mucho estrés te mueves más lento. Si ${CAT_NAME} te ve muy estresado, irá a ayudarte.`] }
     }[ph];
     showModal(`<div class="eyebrow">Tiempo 3 · La Plaza</div><h2>${info.t}</h2><ol class="steps">${info.steps.map(s => `<li>${s}</li>`).join('')}</ol><div class="row"><button class="btn primary" type="button" data-act="go" data-primary>Empezar</button></div>`, { actions: { go: () => { closeModal(); pzStart(ph); } } });
   }
@@ -1145,7 +1145,7 @@
         z.orbT -= s; if (z.orbT <= 0) { z.orbT = 1.6; pzOrb(); }
         if ((z.stress >= 82 || z.waveT > 16) && !z.dilemma) { z.dilemma = true; pzCalm(); return; }
       }
-      // Fuerzas del Creador: se gastan con los inventos acumulados (y más en la oleada 3).
+      // Estrés del Creador (z.energy guarda la calma: estrés = 100 − energy). Sube con los inventos acumulados (y más en la oleada 3).
       const pend = z.items.filter(i => !i.fixed && i.warn <= 0).length;
       pzEnergy(-((pend > 1 ? (pend - 1) * 1.1 : 0) + (z.wave === 3 ? 2.4 : 0)) * s);
       if (z.catCd > 0) z.catCd -= s;
@@ -1201,7 +1201,7 @@
   <div class="dilemma"><button class="dbtn" type="button" data-act="a"><b>No vale la pena</b><span>Lo hago rápido, a mi manera.</span></button><button class="dbtn" type="button" data-act="b"><b>Sí vale la pena…</b><span>pero no tengo que hacerlo solo.</span></button></div>`,
       { kind: 'dilema', actions: { a: () => { closeModal(); pzChooseA(); }, b: () => { closeModal(); pzChooseB(); } } });
   }
-  // Antes del dilema: la plaza se detiene, Boceto se acerca y el Creador recupera fuerzas para decidir con calma.
+  // Antes del dilema: la plaza se detiene, Boceto se acerca y al Creador le baja el estrés para decidir con calma.
   function pzCalm() {
     const z = S.pz; z.paused = true; z.orbs = []; z.sel = null; z.stun = 0; z.calm = { t: 0, phase: 'approach' };
     K.left = K.right = K.up = K.down = false; S.p.tx = null; S.p.moving = false;
@@ -1220,7 +1220,7 @@
       { s: 'piensa', t: CAT_NAME + ' no arregla nada de la plaza. Pero estando aquí, ya no me siento solo.' },
       { s: 'piensa', t: 'Con la cabeza más tranquila, ahora sí puedo pensarlo bien.' }
     ], () => {
-      z.energy = 100; if (z.calm) z.calm.phase = 'done'; toast('Recuperaste tus fuerzas');
+      z.energy = 100; if (z.calm) z.calm.phase = 'done'; toast('Tu estrés bajó');
       setTimeout(() => { if (S.pz === z && z.calm) pzDilemma(); }, 600);
     });
   }
@@ -1339,9 +1339,10 @@
       const glow = z.calm && z.calm.phase !== 'approach', bx = z.calm ? W / 2 - 118 : 14, by = z.calm ? 232 : 562;
       rr(bx, by, 236, 30, 15, 'rgba(42,34,56,.92)', glow ? CAT.eye : OUT, glow ? 3 : 2);
       drawCat(bx + 22, by + 18, { s: 0.62, sit: true, happy: glow, purr: glow, seed: 3 });
-      txt('Tus fuerzas', bx + 80, by + 15.5, '700 12px ' + FONT, COL.cream);
+      const ps = 100 - en;
+      txt('Tu estrés', bx + 80, by + 15.5, '700 12px ' + FONT, COL.cream);
       rr(bx + 124, by + 9, 100, 12, 6, '#3b3152');
-      if (en > 0) rr(bx + 124, by + 9, Math.max(6, en), 12, 6, en > 55 ? '#4cc38a' : (en > 30 ? '#f39c33' : '#d2483a'));
+      if (ps > 0) rr(bx + 124, by + 9, Math.max(6, ps), 12, 6, ps < 45 ? '#4cc38a' : (ps < 70 ? '#f39c33' : '#d2483a'));
     }
     if (z.stun > 0 && !z.calm) { for (let k = 0; k < 3; k++) { const a = S.t * 0.2 + k * 2.1; star(p.x + Math.cos(a) * 16, p.y - 26 + Math.sin(a) * 5, 5, '#ffd36b'); } }
     z.fx.forEach(f => {
